@@ -7,6 +7,8 @@ from .base import Connection
 from ..exceptions import ConnectionError, ImproperlyConfigured, ConnectionTimeout, SSLError
 from ..compat import urlencode
 
+import logging; log = logging.getLogger(__name__)
+
 class Urllib3HttpConnection(Connection):
     """
     Default connection class using the `urllib3` library and the http protocol.
@@ -75,7 +77,11 @@ class Urllib3HttpConnection(Connection):
             if not isinstance(method, str):
                 method = method.encode('utf-8')
 
-            response = self.pool.urlopen(method, url, body, retries=False, headers=self.headers, **kw)
+            headers = self.headers
+            headers.update({
+                'Content-Type': 'application/json',
+            })
+            response = self.pool.urlopen(method, url, body, retries=False, headers=headers, **kw)
             duration = time.time() - start
             raw_data = response.data.decode('utf-8')
         except UrllibSSLError as e:
@@ -96,4 +102,3 @@ class Urllib3HttpConnection(Connection):
             raw_data, duration)
 
         return response.status, response.getheaders(), raw_data
-
